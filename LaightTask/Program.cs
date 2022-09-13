@@ -4,87 +4,189 @@ namespace LaightTask
 {
     class Program
     {
+        enum Action
+        {
+            Damage = 1,
+            Repair = 2
+
+        }
+
+
         static void Main(string[] args)
         {
-            int action; // переменная, которая будет отвечать за действие пользователя 
-            //Создаем два танка, первый для пользователя, второй для компьютера
-            Tank tank1 = new Tank(2, 2, 4);
-            Tank tank2 = new Tank(2, 6, 6);
+
             Console.WriteLine("Правила игры:" + "\n");
             Console.WriteLine("Игра представляет собой текстовый бой двух танков");
             Console.WriteLine("Цель игры: свести жизни вражеского танка к нулю");
             Console.WriteLine("В данной версии игры предоставляется два варианта действий: выстрел и перезарядка" + "\n");
 
-            Console.WriteLine("Начало игры!");
-            //Вызываем метод для отображения кол-во жизней
-            Console.WriteLine($"Кол-во жизней игрока:");
-            tank1.PrintLife();
-            Console.WriteLine($"Кол-во жизней компьютера:");
-            tank2.PrintLife();
-            Console.WriteLine();
 
-            //Цикл который выполняется, пока у вражеского танка есть жизни, игра добрая, в данной версии проиграть нельзя)
-            while (tank1.Life >= 0)
+            Random rnd = new Random();
+
+            //Создаем два танка, первый для пользователя, второй для компьютера
+            Console.WriteLine("Введите броню игрока:");
+            int armor = GetCharacteristics();
+            Console.WriteLine("Введите урон игрока:");
+            int damage = GetCharacteristics();
+            Console.WriteLine("Введите жизни игрока:");
+            int life = GetCharacteristics();
+            Console.WriteLine("Введите броню компьютера:");
+            int pc_armor = GetCharacteristics();
+            Console.WriteLine("Введите урон компьютера:");
+            int pc_damage = GetCharacteristics();
+            Console.WriteLine("Введите жизни компьютера:");
+            int pc_life = GetCharacteristics();
+
+            //int pc_life = Convert.ToInt32(Console.ReadLine());
+            PcTank pcTank = new PcTank();
+            //UserTank userTank = new UserTank { user_life = life, user_damage = damage, user_protection = armor, pc_life = { pc_life = pc_life } };
+            UserTank userTank = new UserTank();
+            pcTank.Print2(ref pc_life, ref pc_damage, ref pc_armor);
+            userTank.Print2(ref life, ref damage, ref armor);
+            Console.WriteLine("Доступные действия:" + "\n");
+            Console.WriteLine("1 - Выстрел" + "\n" + "2 - Ремонт(Получаем 1 жизнь)" + "\n");
+
+            while (pc_life > 0 || life > 0)
             {
-                Console.WriteLine("Выберете дейсвтие:" + "\n" + "1.Выстрел" + "\n" + "2.Починка");
-                action = Convert.ToInt32(Console.ReadLine()); //Переменная для хранения выбранного действия
-                //Цикл обработки выбора действия, если пользователем была введена еденица, то вызовется метод выстрела, если двойка, то метод ремонта
-                if (action == 1)
+                for (int i = 0; i < 1; i++)
                 {
-                    if (tank2.Life > 0)
+                    //Console.WriteLine("Ваш ход! Введите действие:");
+                    int user_action = GetAction();
+                 
+                    ChoiceUserAction((Action)user_action);
+                    Console.WriteLine("#################" + "\n");
+                    if (life <= 0)
                     {
-                        tank2.Shot();
-                        //Рандом кривой, на одно действие
-                        Console.WriteLine();
+                        Console.WriteLine("Вы проиграли( ");
+                        Environment.Exit(0);
+                    }
+                    if (pc_life <= 0)
+                    {
+                        Console.WriteLine("Вы победили!");
+                        Environment.Exit(0);
+                    }
+                    for (int j = 0; j < 1; j++)
+                    {
                         Console.WriteLine("Ход компьютера!");
-                        //Задается рандомное число от 1 до 2, для выбора действия
-                        Random rand = new Random(2);
-                        float actionComp = rand.Next();
-                        //Если 1 - выстрел,то 2 - ремонт
-                        if (actionComp == 1)
-                        {
-                            tank1.Shot();
-                        }
-                        else
-                        {
-                            tank2.Repair();
-                        }
-                        Console.WriteLine();
-                        tank1.PrintLife();
-                        tank2.PrintLife();
+                        
+                        int pc_action = rnd.Next(1,3);
+                        Console.WriteLine(pc_action);
+                        ChoicePCAction((Action)pc_action);
+                        pcTank.Print2(ref pc_life, ref pc_damage, ref pc_armor);
+                        userTank.Print2(ref life, ref damage, ref armor);
                     }
-                    else Console.WriteLine("Вы выиграли!!");
                 }
-                else if (action == 2)
-                {
-                    tank1.Repair();
-                    Console.WriteLine("Ход компьютера!");
-                    Random rand = new Random();
-                    int actionComp = rand.Next(1, 2);
-                    if (actionComp == 1)
-                    {
-                        tank1.Shot();
-                    }
-                    else
-                    {
-                        tank2.Repair();
-                    }
-                    tank1.PrintLife();
-                    tank2.PrintLife();
-                }
-                else
-                {
-                    Console.WriteLine("Вы не правильно ввели действие (выберете действие цифрой 1 или 2)");
-                }
-                //Конструкция для продолжения игры, взял с интернета
-                //Ломается при выборе не символа
-                //Предлагается выбрать, продолжить игру или закончить, при вводе символа отличного от n игра будет продолжена
-                Console.WriteLine("Продолжить? y-да, n-нет (y/n)");
-                ConsoleKeyInfo c = Console.ReadKey();
-                Console.WriteLine();
-                if (c.KeyChar == 'n') break;
+                
             }
-            Console.ReadKey();
+
+            void ChoiceUserAction(Action action)
+            {
+                switch (action)
+                {
+                    case Action.Damage:
+                        userTank.Shot(ref pc_life, ref damage, ref pc_armor);
+                        Console.Write("Ваши показатели:");
+                        userTank.Print2(ref life, ref damage, ref armor);
+                        Console.WriteLine("Показатели компьютера:");
+                        pcTank.Print2(ref pc_life, ref pc_damage, ref pc_armor);
+                        Console.Clear();
+                        break;
+                    case Action.Repair:
+                        userTank.Repair(ref life);
+                        Console.Write("Ваши показатели:");
+                        userTank.Print2(ref life, ref damage, ref armor);
+                        Console.WriteLine();
+                        Console.WriteLine("Показатели компьютера:");
+                        pcTank.Print2(ref pc_life, ref pc_damage, ref pc_armor);
+                        Console.Clear();
+                        break;
+                }
+            }
+
+            void ChoicePCAction(Action action)
+            {
+                switch (action)
+                {
+                    case Action.Damage:
+                        userTank.Shot(ref life, ref pc_damage, ref armor);
+                        Console.Write("Ваши показатели:" + "\n");
+                        userTank.Print2(ref life, ref damage, ref armor);
+                        Console.Write("Показатели компьютера:" + "\n");
+                        pcTank.Print2(ref pc_life, ref pc_damage, ref pc_armor);
+                        Console.WriteLine();
+                        break;
+                    case Action.Repair:
+                        userTank.Repair(ref pc_life);
+                        Console.Write("Ваши показатели:" + "\n");
+                        userTank.Print2(ref life, ref damage, ref armor);
+                        Console.WriteLine("Показатели компьютера:" + "\n");
+                        pcTank.Print2(ref pc_life, ref pc_damage, ref pc_armor);
+                        Console.WriteLine();
+                        break;
+                }
+            }
+            
+            static int GetCharacteristics()
+            {
+                int number;
+                string input = Console.ReadLine();
+                bool isConverted = int.TryParse(input, out number);
+                if (isConverted)
+                {
+                    if (number < 1)
+                    {
+                        isConverted = false;
+                    }
+
+                }
+                while (!isConverted)
+                {
+                    Console.WriteLine("Нужно ввести число!");
+                    input = Console.ReadLine();
+                    isConverted = int.TryParse(input, out number);
+                    if (!isConverted)
+                    {
+                        if (number < 1 || number > 100)
+                        {
+                            isConverted = false;
+                           
+                        }
+                    }
+                }
+                return number;
+
+            }
+            static int GetAction()
+            {
+                int number;
+                Console.WriteLine("Введите действие:");
+                string input = Console.ReadLine();
+                bool isConverted = int.TryParse(input, out number);
+                Console.WriteLine(number);
+                if (isConverted)
+                {
+                    if (number < 1 || number > 2)
+                    {
+                        isConverted = false;
+                    }
+                        
+                }
+
+                while(!isConverted)
+                {
+                    Console.WriteLine("Для выбора действия введите число (1-выстрел, 2-ремонт)");
+                    input = Console.ReadLine();
+                    isConverted = int.TryParse(input, out number);
+                    if (!isConverted)
+                    {
+                        if (number < 1 || number > 2)
+                        {
+                            isConverted = false;
+                        }
+                    }
+                }
+                return number;
+            }
         }
     }
 }
